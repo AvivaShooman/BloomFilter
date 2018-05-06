@@ -7,7 +7,11 @@ class BloomFilter(object):
     # will have a false positive rate of maxFalsePositive.
     # See Slide 12 for the math needed to do this.    
     def __bitsNeeded(self, numKeys, numHashes, maxFalsePositive):
+        #uses max false positive rate and # of hash functions to compute phi
         phi = (1.0- (maxFalsePositive**(1.0/numHashes)))
+        
+        #uses phi, # of hash functions and number of keys to compute
+        #the size of the bit vector needed to initialize the bloom filter
         nBits = float(numHashes)/(1.0-(phi**(1.0/numKeys)))
         return int(nBits)     # make sure # of bits is a whole number
     
@@ -16,24 +20,31 @@ class BloomFilter(object):
     # rate of maxFalsePositive.
     # All attributes must be private.
     def __init__(self, numKeys, numHashes, maxFalsePositive):
-        # will need to use __bitsNeeded to figure out how big
-        # of a BitVector will be needed  
+        
+        # of bits needed is the size to make the bit vector
         self.__size = self.__bitsNeeded(numKeys, numHashes, maxFalsePositive)
         self.__bv = BitVector(size = self.__size)
+        
+        #parameters passed into the constructor become attributes
         self.__numKeys = numKeys
         self.__numHashes = numHashes
         self.__maxFalsePositive = maxFalsePositive
+        
+        #attribute counter for each bit set to 1
         self.__numBitsSet = 0
     
     # insert the specified key into the Bloom Filter.
     # Doesn't return anything, since an insert into 
     # a Bloom Filter always succeeds!
     def insert(self, key):
+        #before the 1st hash value there is no seed
         seed = 0
+        
         #create number of hash values passed into the bloom filter
         for i in range(self.__numHashes):
             h = BitHash(key, seed)
             hv = h % self.__size
+            
             #if location wasn't set, change the bit and increment bit counter
             if self.__bv[hv] == 0:
                 self.__bv[hv] = 1
@@ -46,7 +57,9 @@ class BloomFilter(object):
     # Returns True if key MAY have been inserted into the Bloom filter. 
     # Returns False if key definitely hasn't been inserted into the BF.   
     def find(self, key):
+        #before the 1st hash value there is no seed
         seed = 0
+        
         #create number of hash values passed into the bloom filter
         for i in range(self.__numHashes):
             h = BitHash(key, seed)
@@ -68,6 +81,9 @@ class BloomFilter(object):
     # actually measuring the proportion of false positives that 
     # are actually encountered.
     def falsePositiveRate(self):
+        #computed by using the number of 1s set in the bloom filter,
+        #divided by the size of the bloom filter,
+        #raised to the power of the number of hash functions used
         projectedFPR = (float(self.__numBitsSet)/self.__size)**self.__numHashes
         return projectedFPR
     
@@ -75,9 +91,11 @@ class BloomFilter(object):
     # WHEN TESTING, MAKE SURE THAT YOUR IMPLEMENTATION DOES NOT CAUSE
     # THIS PARTICULAR METHOD TO RUN SLOWLY.
     def numBitsSet(self):
+        #returns counter attribute
         return self.__numBitsSet
 
 def __main():
+    #set parameters for bloom filter
     numKeys = 100000
     numHashes = 4
     maxFalse = 0.05
